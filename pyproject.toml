@@ -1,0 +1,29 @@
+[project]
+name = "fastapi-uv-starter"
+version = "0.1.0"
+authors = [
+    { name = "Angelos Panagiotopoulos", email = "angelospanag@protonmail.com" },
+]
+description = "A starter project using Python, FastAPI and uv."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "aiosmtplib>=4.0.1",
+    "asyncpg>=0.30.0",
+    "email-validator>=2.2.0",
+    "fastapi[standard]>=0.115.12",
+    "openai-agents>=0.1.0",
+    "pydantic>=2.11.3",
+    "python-dotenv>=1.1.0",
+    "sqlalchemy>=2.0.41",
+    "structlog>=25.2.0",
+]
+
+[dependency-groups]
+dev = [
+    "alembic>=1.16.4",
+    "httpx>=0.28.1",
+ "pytest>=8.3.5",
+ "pytest-cov>=6.1.1",
+ "ruff>=0.11.6",
+]
