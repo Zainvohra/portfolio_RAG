@@ -96,6 +96,7 @@ docker-compose up -d
 ```
 
 This will create a database on port 5434 and mailhog.
+(You can customize the port numbers in the docker-compose.yaml)
 
 ### Creating Migrations
 
@@ -108,3 +109,20 @@ alembic revision --autogenerate -m "initial migration"
 ```
 alembic upgrade head
 ```
+
+### Environment Variables
+
+Add the following env variables to your .env
+
+```
+GROQ_API_KEY=GROQ_API_KEY
+DB_HOST_BOOTCAMP=<DB_HOST>
+DB_PORT_BOOTCAMP=<DB_PORT>
+DB_NAME_BOOTCAMP=<DB_NAME>
+DB_USER_BOOTCAMP=<DB_USER>
+DB_PASSWORD_BOOTCAMP=<DB_PASSWORD>
+SMTP_HOST=<MAILHOG_HOST>
+SMTP_PORT=<MAILHOG_PORT>
+```
+
+(Values for these variables can be found in docker-compose)
