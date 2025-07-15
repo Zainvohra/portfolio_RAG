@@ -99,8 +99,12 @@ This will create a database on port 5434 and mailhog.
 
 ### Creating Migrations
 
+```
 alembic revision --autogenerate -m "initial migration"
+```
 
 ### Running Migrations
 
+```
 alembic upgrade head
+```
