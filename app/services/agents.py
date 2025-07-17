@@ -68,36 +68,45 @@ IMPORTANT:
 - For follow-up questions without new user_id or date range, use the context from the previous query.
 """
 
-async def _get_attendance_report_logic(user_id: int, start_date: str, end_date: str) -> str:
+
+async def _get_attendance_report_logic(
+    user_id: int, start_date: str, end_date: str
+) -> str:
     try:
-        print(f"Getting attendance report for user {user_id} from {start_date} to {end_date}")
+        print(
+            f"Getting attendance report for user {user_id} from {start_date} to {end_date}"
+        )
         start = date.fromisoformat(start_date)
         end = date.fromisoformat(end_date)
         db = SessionLocal()
         try:
             attendance_service = AttendanceService(db)
             request = GetAttendanceReportRequest(
-                user_id=user_id,
-                start_date=start,
-                end_date=end
+                user_id=user_id, start_date=start, end_date=end
             )
             report = attendance_service.get_attendance_report(request)
-            result = json.dumps({
-                "user_id": report.user_id,
-                "start_date": report.start_date.isoformat(),
-                "end_date": report.end_date.isoformat(),
-                "total_violations": report.total_violations,
-                "records": [
-                    {
-                        "date": record.date.isoformat(),
-                        "time_in": record.time_in.isoformat() if record.time_in else None,
-                        "time_out": record.time_out.isoformat() if record.time_out else None,
-                        "leave": record.leave,
-                        "violations": record.violations
-                    }
-                    for record in report.records
-                ]
-            })
+            result = json.dumps(
+                {
+                    "user_id": report.user_id,
+                    "start_date": report.start_date.isoformat(),
+                    "end_date": report.end_date.isoformat(),
+                    "total_violations": report.total_violations,
+                    "records": [
+                        {
+                            "date": record.date.isoformat(),
+                            "time_in": (
+                                record.time_in.isoformat() if record.time_in else None
+                            ),
+                            "time_out": (
+                                record.time_out.isoformat() if record.time_out else None
+                            ),
+                            "leave": record.leave,
+                            "violations": record.violations,
+                        }
+                        for record in report.records
+                    ],
+                }
+            )
             print(f"Successfully generated report with {len(report.records)} records")
             return result
         finally:
@@ -106,10 +115,53 @@ async def _get_attendance_report_logic(user_id: int, start_date: str, end_date: 
         print(f"Error in _get_attendance_report_logic: {str(e)}")
         return f"Error generating attendance report: {str(e)}"
 
+
 @function_tool
 async def get_attendance_report(user_id: int, start_date: str, end_date: str) -> str:
     """Get attendance report for a user within a date range."""
     return await _get_attendance_report_logic(user_id, start_date, end_date)
+
+
+@function_tool
+async def get_missing_attendance(user_id: int, start_date: str, end_date: str) -> str:
+    """Get missing attendance records for a user within a date range."""
+    start = date.fromisoformat(start_date)
+    end = date.fromisoformat(end_date)
+    db = SessionLocal()
+
+    try:
+        attendance_service = AttendanceService(db)
+        request = GetAttendanceReportRequest(
+            user_id=user_id, start_date=start, end_date=end
+        )
+        report = attendance_service.get_missing_attendance(request)
+        result = json.dumps(
+            {
+                "user_id": report.user_id,
+                "start_date": report.start_date.isoformat(),
+                "end_date": report.end_date.isoformat(),
+                "total_violations": report.total_violations,
+                "records": [
+                    {
+                        "date": record.date.isoformat(),
+                        "time_in": (
+                            record.time_in.isoformat() if record.time_in else None
+                        ),
+                        "time_out": (
+                            record.time_out.isoformat() if record.time_out else None
+                        ),
+                        "leave": record.leave,
+                    }
+                    for record in report.records
+                ],
+            }
+        )
+        print(f"Successfully generated report with {len(report.records)} records")
+        return result
+    except Exception as e:
+        print(f"Error in _get_attendance_report_logic: {str(e)}")
+        return f"Error generating attendance report: {str(e)}"
+
 
 async def query_pulse_ai(query: str):
     try:
@@ -127,7 +179,7 @@ async def query_pulse_ai(query: str):
             name="PulseAI",
             instructions=PULSE_AI_INSTRUCTIONS,
             model=groq_model,
-            tools=[get_attendance_report]
+            tools=[get_attendance_report, get_missing_attendance],
         )
 
         result = await Runner.run(agent, input=query)
