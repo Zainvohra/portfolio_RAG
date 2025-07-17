@@ -1,22 +1,24 @@
 services:
   db:
     image: pgvector/pgvector:pg17
-    container_name: ai_bootcamp_container
+    container_name: ai_bootcamp_db
     ports:
       - "5434:5432"
+    restart: always
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: ai_bootcamp_db
+      POSTGRES_USER: ${DB_USER_BOOTCAMP}
+      POSTGRES_PASSWORD: ${DB_PASSWORD_BOOTCAMP}
+      POSTGRES_DB: ${DB_NAME_BOOTCAMP}
     volumes:
       - pgdata:/var/lib/postgresql/data
-    restart: always
+    ports:
+      - "5432:5431"   # host_port:container_port
+    env_file:
+      - .env 
 
   mailhog:
     platform: linux/x86_64
     image: mailhog/mailhog
-    networks:
-      - bundle
     ports:
       - 1025:1025
       - 8025:8025

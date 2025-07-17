@@ -4,12 +4,11 @@ from sqlalchemy.orm import sessionmaker
 
 import os
 
-DB_NAME = os.getenv("DB_NAME_BOOTCAMP", "fastapi_db")
+DB_NAME = os.getenv("DB_NAME_BOOTCAMP", "postgres")
 DB_USER = os.getenv("DB_USER_BOOTCAMP", "postgres")
 DB_PASSWORD = os.getenv("DB_PASSWORD_BOOTCAMP", "postgres")
 DB_HOST = os.getenv("DB_HOST_BOOTCAMP", "localhost")
-DB_PORT = os.getenv("DB_PORT_BOOTCAMP", "5434")
-
+DB_PORT = os.getenv("DB_PORT_BOOTCAMP", "5432")
 
 SQLALCHEMY_DATABASE_URL = (
     f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
