@@ -113,10 +113,6 @@ async def get_attendance_report(user_id: int, start_date: str, end_date: str) ->
 
 async def query_pulse_ai(query: str):
     try:
-        print(f"Starting query_pulse_ai with query: {query}")
-        print(f"Using model: {MODEL}")
-        print(f"Base URL: {GROQ_BASE_URL}")
-        
         groq_model = OpenAIChatCompletionsModel(
             model=MODEL,
             openai_client=AsyncOpenAI(
