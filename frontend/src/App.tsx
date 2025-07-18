@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import './App.css';
 import ChatInterface from './components/ChatInterface';
 import Header from './components/Header';
@@ -44,22 +44,21 @@ function App() {
     setIsLoading(true);
 
     try {
-      // TODO: Replace with actual API call to your FastAPI backend
-      // const response = await fetch('/api/chat', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ message: text })
-      // });
-      // const data = await response.json();
-
-      // Simulate API response for now
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const response = await fetch('http://localhost:8000/pulse/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: text })
+      }); 
       
-      const mockResponse = getMockResponse(text);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const agentResponse = await response.text();
       
       setMessages(prev => prev.map(msg => 
         msg.id === aiMessage.id 
-          ? { ...msg, text: mockResponse, isLoading: false }
+          ? { ...msg, text: agentResponse, isLoading: false }
           : msg
       ));
     } catch (error) {
@@ -70,22 +69,6 @@ function App() {
       ));
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const getMockResponse = (userInput: string): string => {
-    const input = userInput.toLowerCase();
-    
-    if (input.includes('onboarding') || input.includes('email')) {
-      return 'I\'ve sent all pending onboarding emails to new employees. The status has been updated in the database.';
-    } else if (input.includes('attendance') || input.includes('missing')) {
-      return 'I found 3 employees with missing attendance records in the last 30 days. Would you like me to send them reminders?';
-    } else if (input.includes('report') || input.includes('july')) {
-      return 'Here\'s your attendance report from July 15 to July 30:\n\n• July 15: In 9:00 AM, Out 5:30 PM\n• July 16: In 8:45 AM, Out 5:15 PM\n• July 17: Missing punch (in)\n• July 18: In 9:15 AM, Out 5:45 PM\n\nYou had 1 violation this period.';
-    } else if (input.includes('meeting') || input.includes('notes')) {
-      return 'I\'ve sent reminder emails to 5 employees who haven\'t submitted their LM meeting notes for this quarter yet.';
-    } else {
-      return 'I understand you\'re asking about "' + userInput + '". I can help you with:\n\n• Sending onboarding emails\n• Identifying missing attendance\n• Generating attendance reports\n• Sending meeting notes reminders\n\nWhat would you like me to do?';
     }
   };
 
