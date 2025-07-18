@@ -13,5 +13,5 @@ async def send_email(to: str, subject: str, body: str):
     await send(
         message,
         hostname=os.getenv("SMTP_HOST", "localhost"),
-        port=os.getenv("SMTP_PORT", 1025),
+        port=int(os.getenv("SMTP_PORT", 1025)),
     )
