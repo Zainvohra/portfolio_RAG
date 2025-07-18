@@ -7,6 +7,7 @@ import json
 from app.services.attendance import AttendanceService
 from app.schemas import GetAttendanceReportRequest
 from app.database import SessionLocal
+from app.services.onboarding_email import OnboardingEmailService
 
 load_dotenv()
 
@@ -173,6 +174,24 @@ def get_missing_attendance(user_id: int, start_date: str, end_date: str) -> str:
     return response
 
 
+async def _send_onboarding_email(user_id: int) -> str:
+    """Send onboarding email to the user with the given user_id if their onboarding status is pending."""
+    db = SessionLocal()
+    try:
+        service = OnboardingEmailService(db)
+        result = await service.send_onboarding_email_to_user(user_id)
+        return result
+    finally:
+        db.close()
+
+
+@function_tool
+async def send_onboarding_email(user_id: int) -> str:
+    """Send onboarding email to the user with the given user_id if their onboarding status is pending."""
+    response = await _send_onboarding_email(user_id=user_id)
+    return response
+
+
 async def query_pulse_ai(query: str):
     try:
         groq_model = OpenAIChatCompletionsModel(
@@ -189,7 +208,7 @@ async def query_pulse_ai(query: str):
             name="PulseAI",
             instructions=PULSE_AI_INSTRUCTIONS,
             model=groq_model,
-            tools=[get_attendance_report, get_missing_attendance],
+            tools=[get_attendance_report, get_missing_attendance, send_onboarding_email],
         )
 
         result = await Runner.run(agent, input=query)
