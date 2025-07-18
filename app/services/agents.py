@@ -122,9 +122,11 @@ async def get_attendance_report(user_id: int, start_date: str, end_date: str) ->
     return await _get_attendance_report_logic(user_id, start_date, end_date)
 
 
-@function_tool
-async def get_missing_attendance(user_id: int, start_date: str, end_date: str) -> str:
+def _get_missing_attendance(user_id: int, start_date: str, end_date: str) -> str:
     """Get missing attendance records for a user within a date range."""
+    print(
+        f"Getting missing attendance for user {user_id} from {start_date} to {end_date}"
+    )
     start = date.fromisoformat(start_date)
     end = date.fromisoformat(end_date)
     db = SessionLocal()
@@ -135,9 +137,10 @@ async def get_missing_attendance(user_id: int, start_date: str, end_date: str) -
             user_id=user_id, start_date=start, end_date=end
         )
         report = attendance_service.get_missing_attendance(request)
+
         result = json.dumps(
             {
-                "user_id": report.user_id,
+                "user_id": user_id,
                 "start_date": report.start_date.isoformat(),
                 "end_date": report.end_date.isoformat(),
                 "total_violations": report.total_violations,
@@ -161,6 +164,13 @@ async def get_missing_attendance(user_id: int, start_date: str, end_date: str) -
     except Exception as e:
         print(f"Error in _get_attendance_report_logic: {str(e)}")
         return f"Error generating attendance report: {str(e)}"
+
+
+@function_tool
+def get_missing_attendance(user_id: int, start_date: str, end_date: str) -> str:
+    """Get missing attendance records for a user within a date range."""
+    response = _get_missing_attendance(user_id, start_date, end_date)
+    return response
 
 
 async def query_pulse_ai(query: str):

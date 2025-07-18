@@ -7,8 +7,6 @@ from app.schemas import (
     GetAttendanceReportRequest,
     AttendanceReportResponse,
 )
-from sqlalchemy import extract
-from datetime import datetime
 
 
 class AttendanceService:
@@ -60,10 +58,8 @@ class AttendanceService:
             .filter(
                 and_(
                     Attendance.user_id == request.user_id,
-                    Attendance.date
-                    >= datetime.strptime(request.start_date, "%Y-%m-%d").date(),
-                    Attendance.date
-                    <= datetime.strptime(request.end_date, "%Y-%m-%d").date(),
+                    Attendance.date >= request.start_date,
+                    Attendance.date <= request.end_date,
                     Attendance.leave.is_(None),
                     or_(
                         Attendance.time_in.is_(None),
@@ -76,17 +72,25 @@ class AttendanceService:
             .all()
         )
 
-        missing_records = []
-        for record in records:
-            missing_records.append(
-                {
-                    "date": record.date.isoformat(),
-                    "time_in": record.time_in.isoformat() if record.time_in else None,
-                    "time_out": (
-                        record.time_out.isoformat() if record.time_out else None
-                    ),
-                    "leave": record.leave,
-                }
-            )
+        attendance_records = []
+        total_violations = 0.0
 
-        return missing_records
+        for record in records:
+            attendance_record = AttendanceRecord(
+                date=record.date,
+                time_in=record.time_in,
+                time_out=record.time_out,
+                leave=record.leave,
+                violations=record.violations,
+            )
+            attendance_records.append(attendance_record)
+            total_violations += record.violations
+
+        return AttendanceReportResponse(
+            user_id=request.user_id,
+            start_date=request.start_date,
+            end_date=request.end_date,
+            records=attendance_records,
+            total_violations=total_violations,
+            summary="",
+        )
