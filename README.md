@@ -1,29 +1,6 @@
-# fastapi-uv-starter
+# AI Developer Bootcamp
 
 A starter project using Python, FastAPI and uv.
-
-<!-- TOC -->
-
-- [fastapi-uv-starter](#fastapi-uv-starter)
-  - [Description](#description)
-  - [Prerequisites](#prerequisites)
-    - [1. Install Python 3 and uv](#1-install-python-3-and-uv)
-    - [2. Create a virtual environment with all necessary dependencies](#2-create-a-virtual-environment-with-all-necessary-dependencies)
-  - [Run application](#run-application)
-    - [Development mode](#development-mode)
-    - [Production mode](#production-mode)
-  - [Testing](#testing)
-    - [With coverage](#with-coverage)
-    - [With coverage and HTML output](#with-coverage-and-html-output)
-  - [Linting](#linting)
-  - [Formatting](#formatting)
-  - [Containerisation](#containerisation)
-    - [1. Build image and tag it as `fastapi-uv-starter`](#1-build-image-and-tag-it-as-fastapi-uv-starter)
-    - [2. Run a container of the previously tagged image (`fastapi-uv-starter`)](#2-run-a-container-of-the-previously-tagged-image-fastapi-uv-starter)
-    - [3. Check running containers](#3-check-running-containers)
-    - [4. Hit sample endpoint](#4-hit-sample-endpoint)
-
-<!-- TOC -->
 
 ## Description
 
@@ -33,7 +10,6 @@ A project starter for personal usage containing the following:
 - [FastAPI](https://fastapi.tiangolo.com/) web framework
 - Structured logging using [`structlog`](https://www.structlog.org/)
 - Dependency management using [`uv`](https://docs.astral.sh/uv/)
-- Containerisation using a Dockerfile
 - Testing with [`pytest`](https://docs.pytest.org/) and optionally with coverage
   with [`pytest-cov`](https://pytest-cov.readthedocs.io/)
 - Linting/formatting using [`ruff`](https://beta.ruff.rs/docs/)
@@ -113,55 +89,40 @@ uv run ruff check app/* tests/*
 uv run ruff format app/* tests/*
 ```
 
-## Containerisation
+## Setting up database and Mailhog
 
-The following `podman` commands are direct replacements of the Docker CLI. You can see that their syntax is identical:
-
-### 1. Build image and tag it as `fastapi-uv-starter`
-
-```bash
-podman image build -t fastapi-uv-starter .
+```
+docker-compose up -d
 ```
 
-### 2. Run a container of the previously tagged image (`fastapi-uv-starter`)
-
-Run our FastAPI application and map our local port `8000` to `80` on the running container:
-
-```bash
-podman container run -d --name fastapi-uv-starter -p 8000:80 --network bridge fastapi-uv-starter
-```
-
-### 3. Check running containers
-
-```bash
-podman ps
-```
-
-```bash
-CONTAINER ID  IMAGE                            COMMAND               CREATED         STATUS             PORTS                 NAMES
-78586e5b4683  localhost/fastapi-uv-starter:latest  uvicorn main:app ...  13 minutes ago  Up 5 minutes ago  0.0.0.0:8000->80/tcp  nifty_roentgen
-```
-
-### 4. Hit sample endpoint
-
-Our FastAPI server now runs on port `8000` on our local machine. We can test it with:
-
-```bash
-curl -i http://localhost:8000/healthcheck
-```
-
-Output:
-
-```bash
-HTTP/1.1 200 OK
-server: uvicorn
-content-length: 0
-```
+This will create a database on port 5434 and mailhog.
+(You can customize the port numbers in the docker-compose.yaml)
 
 ### Creating Migrations
 
+```
 alembic revision --autogenerate -m "initial migration"
+```
 
 ### Running Migrations
 
+```
 alembic upgrade head
+```
+
+### Environment Variables
+
+Add the following env variables to your .env
+
+```
+GROQ_API_KEY=GROQ_API_KEY
+DB_HOST_BOOTCAMP=<DB_HOST>
+DB_PORT_BOOTCAMP=<DB_PORT>
+DB_NAME_BOOTCAMP=<DB_NAME>
+DB_USER_BOOTCAMP=<DB_USER>
+DB_PASSWORD_BOOTCAMP=<DB_PASSWORD>
+SMTP_HOST=<MAILHOG_HOST>
+SMTP_PORT=<MAILHOG_PORT>
+```
+
+(Values for these variables can be found in docker-compose)
