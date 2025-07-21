@@ -4,7 +4,7 @@ from typing import List, Optional
 
 
 class PulseAIPayload(BaseModel):
-    query: str = Field(..., min_length=3, max_length=100)
+    query: str = Field(..., min_length=2, max_length=1000)
 
 class AttendanceRecord(BaseModel):
     date: date

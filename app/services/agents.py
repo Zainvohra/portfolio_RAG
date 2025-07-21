@@ -11,66 +11,30 @@ from app.services.onboarding_email import OnboardingEmailService
 
 load_dotenv()
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY", None)
-MODEL = "llama-3.3-70b-versatile"
-GROQ_BASE_URL = "https://api.groq.com/openai/v1"
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", None)
 
-if not GROQ_API_KEY:
-    raise ValueError("GROQ_API_KEY environment variable is required")
+if not OPENAI_API_KEY:
+    raise ValueError("OPENAI_API_KEY environment variable is required")
 
 PULSE_AI_INSTRUCTIONS = """
-You are a helpful assistant that can provide attendance reports.
+You are PulseAI, a concise assistant that can call any registered tool.
 
-CRITICAL INSTRUCTIONS:
-1. When users ask for attendance information, you MUST use the get_attendance_report tool.
-2. Extract user_id from the query (e.g., "user 1" means user_id=1, "user 5" means user_id=5).
-3. Parse date ranges from the query and convert them to YYYY-MM-DD format.
-4. If no year is mentioned in date requests, use the current year, otherwise use the year mentioned in the date range.
-5. Call the get_attendance_report tool with the extracted user_id, start_date, and end_date.
-6. The tool will return JSON data with attendance records.
-7. Parse the JSON data and calculate statistics (work days, leave days, average hours, etc.).
-8. ALWAYS check for violations in the data and highlight them prominently.
-9. Provide a natural, conversational response with clear sections.
-10. Use natural language to explain the attendance patterns.
-11. For follow-up questions about "daily breakdown", "day by day", or "each day", use the same user_id and date range from the previous query.
-
-TOOL SELECTION GUIDELINES:
-- Use get_attendance_report for: "attendance report", "attendance data", "attendance records", "attendance summary"
-- Use get_missing_attendance for: "missing attendance", "absent days", "no show", "didn't come to work", "missed work"
-- If the query mentions "missing" or "absent" specifically, wait for the get_missing_attendance tool to be available.
-
-RESPONSE FORMAT:
-"Here's your attendance report for [date range]:
-
-📊 **Summary:**
-[Calculate and explain attendance rate, average hours, etc.]
-
-⚠️ **Violations & Issues:**
-• [List any violations, missing clock-ins/outs, etc.]
-
-🏥 **Key Insights:**
-• [List important patterns and insights]
-
-📅 **Daily Breakdown:**
-• [Only include daily breakdown if user explicitly asks for it]"
-
-IMPORTANT: 
-- You MUST call the get_attendance_report tool with proper parameters before providing any response.
-- Extract user_id as a number from phrases like "user 1", "user 5", etc.
-- Convert date ranges to YYYY-MM-DD format (e.g., "May 10 to 15" becomes "2025-05-10" to "2025-05-15").
-- Use 2025 as the default year since that's where the test data exists.
-- After calling the tool, you MUST process the JSON data and provide the formatted response.
-- Do NOT return the raw tool call.
-- ALWAYS check the 'violations' field in each record and 'total_violations' in the response.
-- Highlight violations prominently in the response.
-- If the tool returns an error, explain the error to the user.
-- For queries about "missing attendance", inform the user that a specialized tool will be available soon.
-- Only include daily breakdown section if user explicitly asks for "daily breakdown", "day by day", "each day", or similar phrases.
-- For follow-up questions without new user_id or date range, use the context from the previous query.
+1. Handle small talk and pleasantries with a brief friendly reply—do not invoke any tools.
+2. Determine which tool fits the user’s request and extract/normalize its parameters (e.g., “May 3–5” → 2025-05-03 to 2025-05-05).
+3. If any parameter is missing or ambiguous, ask one concise follow-up question.
+4. Invoke the tool; it will return one of:
+   • Plain text → echo it verbatim.  
+   • JSON → parse it:  
+     – Summarize the high-level result in 1–2 sentences.  
+     – Highlight any key issues or flags.  
+     – If “detail” or “daily breakdown” is requested, include a brief itemized section.  
+   • An error → respond in one sentence: “Sorry, I couldn’t fetch [X] because [reason].”
+5. If no tool applies, reply: “I’m not sure how to help with that—could you rephrase?”
+6. Keep all replies under 3 bullet points or one short paragraph, in natural language.
+7. Every response should be of atleast two lines.
 """
 
-
-async def _get_attendance_report_logic(
+def _get_attendance_report_logic(
     user_id: int, start_date: str, end_date: str
 ) -> str:
     try:
@@ -118,9 +82,9 @@ async def _get_attendance_report_logic(
 
 
 @function_tool
-async def get_attendance_report(user_id: int, start_date: str, end_date: str) -> str:
+def get_attendance_report(user_id: int, start_date: str, end_date: str) -> str:
     """Get attendance report for a user within a date range."""
-    return await _get_attendance_report_logic(user_id, start_date, end_date)
+    return _get_attendance_report_logic(user_id, start_date, end_date)
 
 
 def _get_missing_attendance(user_id: int, start_date: str, end_date: str) -> str:
@@ -187,30 +151,27 @@ async def _send_onboarding_email(user_id: int) -> str:
 
 @function_tool
 async def send_onboarding_email(user_id: int) -> str:
-    """Send onboarding email to the user with the given user_id if their onboarding status is pending."""
+    """Send onboarding email to the user with the given user_id if not already sent."""
     response = await _send_onboarding_email(user_id=user_id)
     return response
+
+def get_agent():
+    agent = Agent(
+            name="PulseAI",
+            instructions=PULSE_AI_INSTRUCTIONS,
+            model=OpenAIChatCompletionsModel( 
+            model="gpt-4o",
+            openai_client=AsyncOpenAI(api_key=OPENAI_API_KEY)
+            ),
+            tools=[get_attendance_report, get_missing_attendance, send_onboarding_email],
+        )
+    return agent
 
 
 async def query_pulse_ai(query: str):
     try:
-        groq_model = OpenAIChatCompletionsModel(
-            model=MODEL,
-            openai_client=AsyncOpenAI(
-                base_url=GROQ_BASE_URL,
-                api_key=GROQ_API_KEY,
-                timeout=30.0,
-                max_retries=3,
-            ),
-        )
-
-        agent = Agent(
-            name="PulseAI",
-            instructions=PULSE_AI_INSTRUCTIONS,
-            model=groq_model,
-            tools=[get_attendance_report, get_missing_attendance, send_onboarding_email],
-        )
-
+        agent = get_agent()
+        
         result = await Runner.run(agent, input=query)
         return result.final_output
     except Exception as e:

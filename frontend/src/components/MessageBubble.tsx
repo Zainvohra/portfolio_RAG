@@ -1,5 +1,7 @@
 import React from 'react';
 import { User, Bot } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Message } from '../App';
 
 interface MessageBubbleProps {
@@ -9,16 +11,6 @@ interface MessageBubbleProps {
 const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
-  const formatText = (text: string) => {
-    // Convert newlines to <br> tags and preserve formatting
-    return text.split('\n').map((line, index) => (
-      <React.Fragment key={index}>
-        {line}
-        {index < text.split('\n').length - 1 && <br />}
-      </React.Fragment>
-    ));
   };
 
   return (
@@ -49,7 +41,17 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
               <span></span>
             </div>
           ) : (
-            formatText(message.text)
+            <div className="markdown-content">
+              <ReactMarkdown 
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  p: ({ children }) => <p style={{ margin: '0.5rem 0' }}>{children}</p>,
+                  br: () => <br />,
+                }}
+              >
+                {message.text.replace(/\\n/g, '\n')}
+              </ReactMarkdown>
+            </div>
           )}
         </div>
       </div>

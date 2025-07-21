@@ -43,18 +43,9 @@ async def chat(payload: PulseAIPayload):
 
         inference = await query_pulse_ai(payload.query)
 
-        try:
-            await send_email(
-                to="abc@xyz.com",
-                subject="Your Pulse AI Response",
-                body=f"Here is your response: {inference}",
-            )
-        except Exception as email_error:
-            logger.error("Failed to send email", error=str(email_error))
-
         logger.info("Chat response generated", response=inference)
 
-        return Response(content=inference, media_type="application/json")
+        return inference
     except Exception as e:
         logger.error("Error in chat endpoint", error=str(e))
         return Response(

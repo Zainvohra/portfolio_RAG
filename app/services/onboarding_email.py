@@ -17,8 +17,8 @@ class OnboardingEmailService:
         if user is None:
             return f"User with id {user_id} not found."
         
-        if getattr(user, 'onboarding_status', None) != "pending":
-            return f"User {user_id} onboarding status is not pending. Current status: {getattr(user, 'onboarding_status', None)}"
+        if user.onboarding_status != "pending":
+            return f"I believe onboarding emails have already been sent to user {user_id}. Current status: {user.onboarding_status}"
         
         for template in ONBOARDING_TEMPLATES:
             body = template.format(name=user.name)
