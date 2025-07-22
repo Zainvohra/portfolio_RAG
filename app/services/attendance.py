@@ -105,7 +105,6 @@ class AttendanceService:
                     Attendance.date <= end_date,
                     or_(
                         Attendance.violations > 1,
-                        Attendance.leave.is_(None),
                     ),
                 )
             )
