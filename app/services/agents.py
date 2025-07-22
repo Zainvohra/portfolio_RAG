@@ -90,11 +90,11 @@ def _get_missing_attendance_user_ids(start_date: str, end_date: str) -> str:
                 start_date, end_date
             )
 
-            result = json.dumps(
-                [{"user_id": record.user_id} for record in missing_records]
-            )
+            unique_user_ids = set(record.user_id for record in missing_records)
+
+            result = json.dumps([{"user_id": id} for id in unique_user_ids])
             print(
-                f"Successfully generated admin report with {len(missing_records)} records"
+                f"Successfully generated admin report with {len(unique_user_ids)} records"
             )
             return result
         finally:
@@ -112,7 +112,7 @@ def get_attendance_report(user_id: int, start_date: str, end_date: str) -> str:
 
 @function_tool
 def get_missing_attendance_user_ids(start_date: str, end_date: str) -> str:
-    """Returns a list of user IDs with missing attendance records."""
+    """Returns a list of user IDs with missing attendance records, violations or leaves."""
     return _get_missing_attendance_user_ids(start_date, end_date)
 
 

@@ -105,9 +105,8 @@ class AttendanceService:
                     Attendance.date <= end_date,
                     or_(
                         Attendance.violations > 1,
-                        Attendance.leave >= 2,
+                        Attendance.leave.is_(None),
                     ),
-                    not_(func.extract("dow", Attendance.date).in_([0, 6])),
                 )
             )
             .all()
