@@ -115,7 +115,7 @@ alembic upgrade head
 Add the following env variables to your .env
 
 ```
-GROQ_API_KEY=GROQ_API_KEY
+OPENAI_API_KEY=GROQ_API_KEY
 DB_HOST_BOOTCAMP=<DB_HOST>
 DB_PORT_BOOTCAMP=<DB_PORT>
 DB_NAME_BOOTCAMP=<DB_NAME>

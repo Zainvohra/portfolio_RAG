@@ -32,6 +32,8 @@ def upgrade() -> None:
     op.drop_column('attendance', 'missing_clock_out')
     op.drop_column('attendance', 'early_departure_minutes')
     op.drop_column('attendance', 'in_time')
+    # Remove onboarding_status column addition from upgrade
+    # Remove onboarding_status column drop from downgrade
     # ### end Alembic commands ###
 
 
@@ -48,6 +50,7 @@ def downgrade() -> None:
     op.drop_column('attendance', 'leave')
     op.drop_column('attendance', 'time_out')
     op.drop_column('attendance', 'time_in')
+    # Remove onboarding_status column drop from downgrade
     op.create_table('employees',
     sa.Column('id', sa.INTEGER(), autoincrement=False, nullable=False),
     sa.Column('name', sa.VARCHAR(length=255), autoincrement=False, nullable=True),
