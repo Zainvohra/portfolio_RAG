@@ -18,7 +18,7 @@ class AttendanceRecord(BaseModel):
         from_attributes = True
 
 
-class AdminAttendanceRecord(AttendanceRecord):
+class AdminAttendanceRecord(BaseModel):
     user_id: int
 
 

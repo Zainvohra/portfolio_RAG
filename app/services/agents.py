@@ -80,32 +80,18 @@ def _get_attendance_report_logic(user_id: int, start_date: str, end_date: str) -
         return f"Error generating attendance report: {str(e)}"
 
 
-def _get_admin_missing_attendance_report_logic(start_date: str, end_date: str) -> str:
+def _get_missing_attendance_user_ids(start_date: str, end_date: str) -> str:
     try:
         print(f"Getting admin attendance report from {start_date} to {end_date}")
         db = SessionLocal()
         try:
             attendance_service = AttendanceService(db)
-            missing_records = attendance_service.get_admin_missing_attendance_report(
+            missing_records = attendance_service._get_missing_attendance_user_ids(
                 start_date, end_date
             )
 
             result = json.dumps(
-                [
-                    {
-                        "date": record.date.isoformat(),
-                        "time_in": (
-                            record.time_in.isoformat() if record.time_in else None
-                        ),
-                        "time_out": (
-                            record.time_out.isoformat() if record.time_out else None
-                        ),
-                        "leave": record.leave,
-                        "violations": record.violations,
-                        "user_id": record.user_id,
-                    }
-                    for record in missing_records
-                ]
+                [{"user_id": record.user_id} for record in missing_records]
             )
             print(
                 f"Successfully generated admin report with {len(missing_records)} records"
@@ -125,9 +111,9 @@ def get_attendance_report(user_id: int, start_date: str, end_date: str) -> str:
 
 
 @function_tool
-def get_admin_missing_attendance_report_logic(start_date: str, end_date: str) -> str:
-    """Gets missing attendance report for all users within a date range."""
-    return _get_admin_missing_attendance_report_logic(start_date, end_date)
+def get_missing_attendance_user_ids(start_date: str, end_date: str) -> str:
+    """Returns a list of user IDs with missing attendance records."""
+    return _get_missing_attendance_user_ids(start_date, end_date)
 
 
 def _get_missing_attendance(user_id: int, start_date: str, end_date: str) -> str:
@@ -210,7 +196,7 @@ def get_agent():
             get_attendance_report,
             get_missing_attendance,
             send_onboarding_email,
-            get_admin_missing_attendance_report_logic,
+            get_missing_attendance_user_ids,
         ],
     )
     return agent
