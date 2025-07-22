@@ -34,9 +34,8 @@ You are PulseAI, a concise assistant that can call any registered tool.
 7. Every response should be of atleast two lines.
 """
 
-def _get_attendance_report_logic(
-    user_id: int, start_date: str, end_date: str
-) -> str:
+
+def _get_attendance_report_logic(user_id: int, start_date: str, end_date: str) -> str:
     try:
         print(
             f"Getting attendance report for user {user_id} from {start_date} to {end_date}"
@@ -81,10 +80,54 @@ def _get_attendance_report_logic(
         return f"Error generating attendance report: {str(e)}"
 
 
+def _get_admin_missing_attendance_report_logic(start_date: str, end_date: str) -> str:
+    try:
+        print(f"Getting admin attendance report from {start_date} to {end_date}")
+        db = SessionLocal()
+        try:
+            attendance_service = AttendanceService(db)
+            missing_records = attendance_service.get_admin_missing_attendance_report(
+                start_date, end_date
+            )
+
+            result = json.dumps(
+                [
+                    {
+                        "date": record.date.isoformat(),
+                        "time_in": (
+                            record.time_in.isoformat() if record.time_in else None
+                        ),
+                        "time_out": (
+                            record.time_out.isoformat() if record.time_out else None
+                        ),
+                        "leave": record.leave,
+                        "violations": record.violations,
+                        "user_id": record.user_id,
+                    }
+                    for record in missing_records
+                ]
+            )
+            print(
+                f"Successfully generated admin report with {len(missing_records)} records"
+            )
+            return result
+        finally:
+            db.close()
+    except Exception as e:
+        print(f"Error in _get_admin_attendance_report_logic: {str(e)}")
+        return f"Error generating admin attendance report: {str(e)}"
+
+
 @function_tool
 def get_attendance_report(user_id: int, start_date: str, end_date: str) -> str:
     """Get attendance report for a user within a date range."""
     return _get_attendance_report_logic(user_id, start_date, end_date)
+
+
+@function_tool
+def get_admin_missing_attendance_report_logic(start_date: str, end_date: str) -> str:
+    """Gets missing attendance report for all users within a date range."""
+    return _get_admin_missing_attendance_report_logic(start_date, end_date)
 
 
 def _get_missing_attendance(user_id: int, start_date: str, end_date: str) -> str:
@@ -155,23 +198,27 @@ async def send_onboarding_email(user_id: int) -> str:
     response = await _send_onboarding_email(user_id=user_id)
     return response
 
+
 def get_agent():
     agent = Agent(
-            name="PulseAI",
-            instructions=PULSE_AI_INSTRUCTIONS,
-            model=OpenAIChatCompletionsModel( 
-            model="gpt-4o",
-            openai_client=AsyncOpenAI(api_key=OPENAI_API_KEY)
-            ),
-            tools=[get_attendance_report, get_missing_attendance, send_onboarding_email],
-        )
+        name="PulseAI",
+        instructions=PULSE_AI_INSTRUCTIONS,
+        model=OpenAIChatCompletionsModel(
+            model="gpt-4o", openai_client=AsyncOpenAI(api_key=OPENAI_API_KEY)
+        ),
+        tools=[
+            get_attendance_report,
+            get_missing_attendance,
+            send_onboarding_email,
+            get_admin_missing_attendance_report_logic,
+        ],
+    )
     return agent
 
 
 async def query_pulse_ai(query: str):
     try:
         agent = get_agent()
-        
         result = await Runner.run(agent, input=query)
         return result.final_output
     except Exception as e:
