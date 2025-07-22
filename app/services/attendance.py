@@ -6,6 +6,7 @@ from app.schemas import (
     AttendanceRecord,
     GetAttendanceReportRequest,
     AttendanceReportResponse,
+    AdminAttendanceRecord,
 )
 
 
@@ -94,3 +95,26 @@ class AttendanceService:
             total_violations=total_violations,
             summary="",
         )
+
+    def _get_missing_attendance_user_ids(self, start_date: str, end_date: str):
+        records = (
+            self.db.query(Attendance)
+            .filter(
+                and_(
+                    Attendance.date >= start_date,
+                    Attendance.date <= end_date,
+                    or_(
+                        Attendance.violations > 1,
+                    ),
+                )
+            )
+            .all()
+        )
+
+        attendance_records = []
+
+        for record in records:
+            attendance_record = AdminAttendanceRecord(user_id=record.user_id)
+            attendance_records.append(attendance_record)
+
+        return attendance_records
