@@ -100,6 +100,10 @@ This will create a database on port 5434 and mailhog.
 
 ### Creating Migrations
 
+Find alembic.ini at the root of the project. Find `sqlalchemy.url` and add this value
+
+`postgresql+psycopg2://{{username}}:{{password}}@localhost:{{db_port}}/{{db_name}}`
+
 ```
 alembic revision --autogenerate -m "initial migration"
 ```
@@ -115,7 +119,7 @@ alembic upgrade head
 Add the following env variables to your .env
 
 ```
-OPENAI_API_KEY=GROQ_API_KEY
+OPENAI_API_KEY=OPENAI_API_KEY
 DB_HOST_BOOTCAMP=<DB_HOST>
 DB_PORT_BOOTCAMP=<DB_PORT>
 DB_NAME_BOOTCAMP=<DB_NAME>
@@ -126,3 +130,11 @@ SMTP_PORT=<MAILHOG_PORT>
 ```
 
 (Values for these variables can be found in docker-compose)
+
+### Creating dummy data
+
+From the tests directory in this project, run the following command:
+
+```
+python tests/test_generate_mock_attendance.py
+```
