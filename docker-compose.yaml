@@ -10,7 +10,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
-      - "5432:5431"   # host_port:container_port
+      - "5433:5432"   # host_port:container_port
     env_file:
       - .env 
 
