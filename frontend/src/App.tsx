@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
-import './App.css';
-import ChatInterface from './components/ChatInterface';
-import Header from './components/Header';
+import React, { useState } from "react";
+import "./App.css";
+import ChatInterface from "./components/ChatInterface";
+import Header from "./components/Header";
+import ActionsSidebar from "./components/ActionsSidebar";
 
 export interface Message {
   id: string;
   text: string;
-  sender: 'user' | 'ai';
+  sender: "user" | "ai";
   timestamp: Date;
   isLoading?: boolean;
 }
@@ -14,13 +15,14 @@ export interface Message {
 function App() {
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: '1',
-      text: 'Hello! I\'m PulseAI, your intelligent assistant. How can I help you today?',
-      sender: 'ai',
-      timestamp: new Date()
-    }
+      id: "1",
+      text: "Hello! I'm PulseAI, your intelligent assistant. How can I help you today?",
+      sender: "ai",
+      timestamp: new Date(),
+    },
   ]);
   const [isLoading, setIsLoading] = useState(false);
+  const [inputText, setInputText] = useState("");
 
   const handleSendMessage = async (text: string) => {
     if (!text.trim()) return;
@@ -28,45 +30,53 @@ function App() {
     const userMessage: Message = {
       id: Date.now().toString(),
       text: text.trim(),
-      sender: 'user',
-      timestamp: new Date()
+      sender: "user",
+      timestamp: new Date(),
     };
 
     const aiMessage: Message = {
       id: (Date.now() + 1).toString(),
-      text: '',
-      sender: 'ai',
+      text: "",
+      sender: "ai",
       timestamp: new Date(),
-      isLoading: true
+      isLoading: true,
     };
 
-    setMessages(prev => [...prev, userMessage, aiMessage]);
+    setMessages((prev) => [...prev, userMessage, aiMessage]);
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8000/pulse/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: text })
-      }); 
-      
+      const response = await fetch("http://localhost:8000/pulse/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: text }),
+      });
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const agentResponse = await response.text();
-      
-      setMessages(prev => prev.map(msg => 
-        msg.id === aiMessage.id 
-          ? { ...msg, text: agentResponse, isLoading: false }
-          : msg
-      ));
+
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === aiMessage.id
+            ? { ...msg, text: agentResponse, isLoading: false }
+            : msg
+        )
+      );
     } catch (error) {
-      setMessages(prev => prev.map(msg => 
-        msg.id === aiMessage.id 
-          ? { ...msg, text: 'Sorry, I encountered an error. Please try again.', isLoading: false }
-          : msg
-      ));
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === aiMessage.id
+            ? {
+                ...msg,
+                text: "Sorry, I encountered an error. Please try again.",
+                isLoading: false,
+              }
+            : msg
+        )
+      );
     } finally {
       setIsLoading(false);
     }
@@ -75,11 +85,16 @@ function App() {
   return (
     <div className="App">
       <Header />
-      <ChatInterface 
-        messages={messages}
-        onSendMessage={handleSendMessage}
-        isLoading={isLoading}
-      />
+      <div className="main-app">
+        <ChatInterface
+          messages={messages}
+          onSendMessage={handleSendMessage}
+          isLoading={isLoading}
+          inputText={inputText}
+          setInputText={setInputText}
+        />
+        <ActionsSidebar setInputText={setInputText} />
+      </div>
     </div>
   );
 }

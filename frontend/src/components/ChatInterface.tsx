@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Send, Loader2 } from 'lucide-react';
 import MessageBubble from './MessageBubble';
 import { Message } from '../App';
@@ -7,14 +7,18 @@ interface ChatInterfaceProps {
   messages: Message[];
   onSendMessage: (text: string) => void;
   isLoading: boolean;
+  inputText: string;
+  setInputText: (text: string) => void;
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ 
   messages, 
   onSendMessage, 
-  isLoading 
+  isLoading,
+  inputText,
+  setInputText
 }) => {
-  const [inputText, setInputText] = useState('');
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -78,6 +82,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             onKeyPress={handleKeyPress}
             placeholder="Ask PulseAI anything... (e.g., 'send onboarding emails', 'get attendance report')"
             className="message-input"
+            id='chat-input'
             rows={1}
             disabled={isLoading}
           />
