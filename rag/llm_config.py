@@ -1,5 +1,6 @@
 import os
 import sys
+
 from agents import set_tracing_disabled
 from agents.extensions.models.litellm_model import LitellmModel
 
@@ -66,11 +67,7 @@ configure_openai_tracing(enabled=True)
 
 
 # Initialize Groq model
-# llm_model = configure_groq_model() 
-
-# Initialize Groq model
 llm_model = configure_gemini_model() 
-# llm_model.turn_on_debug()
 
 
 

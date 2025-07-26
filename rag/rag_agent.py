@@ -22,7 +22,8 @@ class RAGAgent:
             """,
             model=self.model,
             tools=[
-                rag_tools
+                rag_tools,
+
             ]
         )
 
