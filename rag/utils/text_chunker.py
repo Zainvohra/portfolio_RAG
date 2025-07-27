@@ -3,7 +3,7 @@ from typing import List
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 
-from utils.pdf_reader import read_pdf_documents
+from .pdf_reader import read_pdf_documents
 
 
 def create_text_splitter(chunk_size: int = 1000, chunk_overlap: int = 200) -> RecursiveCharacterTextSplitter:
@@ -57,4 +57,6 @@ def chunk_pdf_documents(document_path: str, chunk_size: int = 1000, chunk_overla
 
 
 if __name__ == "__main__":
-    print(chunk_pdf_documents("docs/employee_handbook.pdf"))
+    pdf_path = "docs/employee_handbook.pdf"
+    chunks = chunk_pdf_documents(pdf_path)
+    print(f"Successfully created {len(chunks)} chunks from {pdf_path}")

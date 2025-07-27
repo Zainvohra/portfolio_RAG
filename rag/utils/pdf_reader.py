@@ -35,5 +35,14 @@ def read_pdf_content(document_path: str) -> str:
 
 
 if __name__ == "__main__":
-    print(read_pdf_documents("../docs/employee_handbook.pdf"))
+    pdf_path = "docs/employee_handbook.pdf"
+    print(f"Reading PDF from: {pdf_path}")
+    documents = read_pdf_documents(pdf_path)
+    print(f"Successfully loaded {len(documents)} pages")
+    if documents:
+        print(f"First page preview: {documents[0].page_content[:200]}...")
+
+    # Test content function
+    content = read_pdf_content(pdf_path)
+    print(f"Total content length: {len(content)} characters")
 

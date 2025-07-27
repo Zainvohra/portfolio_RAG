@@ -55,6 +55,8 @@ def configure_gemini_model():
 
     print(f"✅ Gemini model configured (for LLM operations)")
 
+    print(f"Gemini key: {gemini_api_key[:7]}...{gemini_api_key[-4:]}")
+
     # Create the LiteLLM model configuration
     return LitellmModel(
         model="gemini/gemini-2.0-flash-exp",
@@ -66,8 +68,7 @@ def configure_gemini_model():
 configure_openai_tracing(enabled=True)
 
 
-# Initialize Groq model
-llm_model = configure_gemini_model() 
+llm_model = configure_gemini_model()
 
 
 

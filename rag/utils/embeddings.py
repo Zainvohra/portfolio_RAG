@@ -34,7 +34,23 @@ class EmbeddingManager:
 
 
 if __name__ == "__main__":
-    # Example usage
-    query = "Hello, world!"
-    query_embedding = EmbeddingManager().create_query_embedding(query)
-    print("Query embedding:", query_embedding)
+    # Example usage and testing
+    print("Testing EmbeddingManager...")
+    
+    # Test basic functionality
+    embedding_manager = EmbeddingManager()
+    
+    # Test queries
+    test_queries = [
+        "Hello, world!",
+        "What is the company's remote work policy?",
+        "Employee benefits and vacation time"
+    ]
+    
+    for query in test_queries:
+        print(f"\nQuery: '{query}'")
+        query_embedding = embedding_manager.create_query_embedding(query)
+        print(f"Embedding dimensions: {len(query_embedding)}")
+        print(f"First 5 values: {query_embedding[:5]}")
+    
+    print("\nEmbeddingManager test completed successfully!")

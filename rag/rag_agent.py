@@ -4,8 +4,7 @@ from agents import Agent, run_demo_loop
 from llm_config import llm_model
 
 # Import our RAG tools
-from rag_tools import (
-)
+from rag_tools import rag_search_tool
 
 
 class RAGAgent:
@@ -16,17 +15,24 @@ class RAGAgent:
 
         # Create the agentic RAG assistant with proper tools
         self.agent = Agent(
-            name="RAG Assistant",
-            instructions="""You are an intelligent RAG (Retrieval Augmented Generation) assistant with access to powerful document processing and search tools.
-    
+            name="Employee Handbook RAG Assistant",
+            instructions="""You are an intelligent RAG (Retrieval Augmented Generation) assistant specialized in answering questions about the employee handbook.
+
+Your primary function is to help users find information from the company's employee handbook. When users ask questions, you should:
+
+1. Use the rag_search_tool to search the employee handbook content
+2. Always use the index name 'employee_handbook' when calling the search tool
+3. Provide clear, helpful answers based on the retrieved information
+4. If the information isn't found in the handbook, clearly state that
+5. Focus only on employee handbook related queries
+
+You have access to semantic search capabilities that can find relevant information even when the exact words don't match the query.
             """,
             model=self.model,
             tools=[
-                rag_tools,
-
+                rag_search_tool
             ]
         )
-
 
 
 # Create a global instance

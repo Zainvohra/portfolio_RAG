@@ -4,20 +4,21 @@ from typing import List, Optional
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
 
-from utils.embeddings import EmbeddingManager
-from utils.text_chunker import chunk_pdf_documents
+from .embeddings import EmbeddingManager
+from .text_chunker import chunk_pdf_documents
 
 
 class VectorStoreManager:
     """Manages FAISS vector store operations."""
     
     def __init__(self, embedding_manager: Optional[EmbeddingManager] = None,
-                 vectorstore_dir_path: Optional[str] = "vectorstore"):
+                 vectorstore_dir_path: str = "vectorstore"):
         """
         Initialize the vector store manager.
         
         Args:
             embedding_manager (Optional[EmbeddingManager]): Embedding manager instance
+            vectorstore_dir_path (str): Directory path for vectorstore files
         """
         self.vectorstore_dir_path = vectorstore_dir_path
         self.embedding_manager = embedding_manager or EmbeddingManager()
@@ -132,8 +133,7 @@ class VectorStoreManager:
         
         return self.vectorstore.similarity_search_by_vector(query_embedding, k=k)
 
-
-def test():
+if __name__ == "__main__":
     print("VectorStoreManager Example Usage")
     print("=" * 50)
 
@@ -141,12 +141,12 @@ def test():
     vs_manager = VectorStoreManager()
 
     # Process PDF and create chunks
-    chunks = chunk_pdf_documents("docs/employee_handbook.pdf")
-    vs_manager.create_vectorstore_from_chunks(chunks)
-    vs_manager.save_vectorstore("employee_handbook")
+    # chunks = chunk_pdf_documents("docs/employee_handbook.pdf")
+    # vs_manager.create_vectorstore_from_chunks(chunks)
+    # vs_manager.save_vectorstore("employee_handbook")
 
-    # Load vectorstore
-    # vs_manager.load_vectorstore("employee_handbook")
+    # Load vectorstore if
+    vs_manager.load_vectorstore("employee_handbook")
 
     # Perform semantic search
     query = "What is the company's policy on remote work?"
@@ -155,8 +155,4 @@ def test():
     print(f"Search results for '{query}':")
     for i, result in enumerate(results):
         print(f"{i + 1}. {result.page_content}...")
-
-
-if __name__ == "__main__":
-    test()
 
