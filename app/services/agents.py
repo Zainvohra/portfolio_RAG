@@ -3,18 +3,20 @@ import os
 from dotenv import load_dotenv
 from datetime import date
 import json
-
+from agents.extensions.models.litellm_model import LitellmModel
 from app.services.attendance import AttendanceService
 from app.schemas import GetAttendanceReportRequest
 from app.database import SessionLocal
 from app.services.onboarding_email import OnboardingEmailService
+from rag.rag_tools import rag_search_tool
 
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", None)
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", None)
 
-if not OPENAI_API_KEY:
-    raise ValueError("OPENAI_API_KEY environment variable is required")
+if not OPENAI_API_KEY or not GEMINI_API_KEY:
+    raise ValueError("LLM API Keys are required")
 
 PULSE_AI_INSTRUCTIONS = """
 You are PulseAI, a concise assistant that can call any registered tool.
@@ -32,6 +34,18 @@ You are PulseAI, a concise assistant that can call any registered tool.
 5. If no tool applies, reply: “I’m not sure how to help with that—could you rephrase?”
 6. Keep all replies under 3 bullet points or one short paragraph, in natural language.
 7. Every response should be of atleast two lines.
+"""
+
+PULSE_RAG_AI_INSTRUCTIONS = """You are an intelligent RAG (Retrieval Augmented Generation) assistant specialized in answering questions about the employee handbook.
+Your primary function is to help users find information from the company's employee handbook. When users ask questions, you should:
+
+1. Use the rag_search_tool to search the employee handbook content
+2. Always use the index name 'employee_handbook' when calling the search tool
+3. Provide clear, helpful answers based on the retrieved information
+4. If the information isn't found in the handbook, clearly state that
+5. Focus only on employee handbook related queries
+
+You have access to semantic search capabilities that can find relevant information even when the exact words don't match the query.
 """
 
 
@@ -201,10 +215,26 @@ def get_agent():
     )
     return agent
 
+def get_rag_agent():
+    agent = Agent(
+            name="Employee Handbook RAG Assistant",
+            instructions=PULSE_RAG_AI_INSTRUCTIONS,
+            model=LitellmModel(
+            model="gemini/gemini-2.0-flash-exp",
+            api_key=GEMINI_API_KEY,
+            ),
+            tools=[
+                rag_search_tool
+            ]
+        )
+    return agent
 
 async def query_pulse_ai(query: str):
     try:
-        agent = get_agent()
+        # For Tool Calling Agent
+        # agent = get_agent()
+        # For RAG Agent
+        agent = get_rag_agent()
         result = await Runner.run(agent, input=query)
         return result.final_output
     except Exception as e:
