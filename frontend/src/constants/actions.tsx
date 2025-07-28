@@ -39,7 +39,7 @@ export const ACTIONS_LIST: Action[] = [
       id: 'employee-handbook',
       title: 'Employee Handbook',
       description: 'Search and query related to employee handbook',
-      prompt: "e.g. 'What is the referral bonus policy?'",
+      prompt: "What's the company policy for leaves?",
       icon: <Users className="w-4 h-4" />,
       category: 'RAG'
     },
@@ -47,8 +47,33 @@ export const ACTIONS_LIST: Action[] = [
       id: 'self-review',
       title: 'Self Review',
       description: 'Get answers related to your performance, goals, and feedback',
-      prompt: "e.g. 'What are my goals for this review period?'",
+      prompt: "What are my goals for this review period?",
       icon: <FileText className="w-4 h-4" />,
       category: 'RAG'
-    }
+    },
+    {
+      id: 'employee-handbook',
+      title: 'Employee Handbook',
+      description: 'Search and query related to employee handbook',
+      prompt: "Provide me details about the OPD?",
+      icon: <Users className="w-4 h-4" />,
+      category: 'RAG'
+    },
+    {
+      id: 'self-review',
+      title: 'Self Review',
+      description: 'Get answers by comparing your performance across reviews',
+      prompt: "Which AI tools have I started to use and which tool have I stopped using?",
+      icon: <FileText className="w-4 h-4" />,
+      category: 'RAG'
+    },
+    {
+      id: 'employee-handbook',
+      title: 'Employee Handbook',
+      description: 'Reasoning to validate eligibility as per the policy',
+      prompt: "I have been working for 2 years, am I eligible for the company car policy? If yes, what is the process to avail it?",
+      // prompt: "How can I earn an extra leave? explain in detail",
+      icon: <Users className="w-4 h-4" />,
+      category: 'RAG'
+    },
   ];
