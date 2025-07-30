@@ -12,7 +12,7 @@ class VectorStoreManager:
     """Manages FAISS vector store operations."""
     
     def __init__(self, embedding_manager: Optional[EmbeddingManager] = None,
-                 vectorstore_dir_path: str = "rag\\vectorstore"
+                 vectorstore_dir_path: str = "rag\\vectorstore"):
                 # vectorstore_dir_path: str = "rag/vectorstore"):
         """
         Initialize the vector store manager.
