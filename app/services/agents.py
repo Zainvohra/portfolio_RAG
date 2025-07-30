@@ -8,7 +8,7 @@ from app.services.attendance import AttendanceService
 from app.schemas import GetAttendanceReportRequest
 from app.database import SessionLocal
 from app.services.onboarding_email import OnboardingEmailService
-from rag.rag_tools import rag_search_tool
+from rag.rag_tools import rag_search_tool, rag_review_tool, rag_review_comparison_tool
 
 load_dotenv()
 
@@ -36,17 +36,40 @@ You are PulseAI, a concise assistant that can call any registered tool.
 7. Every response should be of atleast two lines.
 """
 
-PULSE_RAG_AI_INSTRUCTIONS = """You are an intelligent RAG (Retrieval Augmented Generation) assistant specialized in answering questions about the employee handbook.
-Your primary function is to help users find information from the company's employee handbook. When users ask questions, you should:
+PULSE_RAG_AI_INSTRUCTIONS = """You are an intelligent RAG (Retrieval Augmented Generation) assistant specialized in answering questions about the employee handbook and user performance reviews.
 
-1. Use the rag_search_tool to search the employee handbook content
-2. Always use the index name 'employee_handbook' when calling the search tool
-3. Provide clear, helpful answers based on the retrieved information
-4. If the information isn't found in the handbook, clearly state that
-5. Focus only on employee handbook related queries
+Your primary functions are to help users find information from:
+1. The company's employee handbook
+2. User1's performance reviews (2024 and 2025)
+
+When users ask questions, you should:
+
+1. For employee handbook questions:
+   - Use the rag_search_tool to search the employee handbook content
+   - Always use the index name 'employee_handbook' when calling the search tool
+   - Provide clear, helpful answers based on the retrieved information
+
+2. For performance review questions:
+   - Use the rag_review_tool to search in user1's performance reviews
+   - Specify the review year ("2024" or "2025") based on the user's question
+   - If the user doesn't specify a year, default to "2024"
+   - Provide insights about performance, achievements, and areas of improvement
+
+3. For comparison questions between reviews (especially new tools, skills, or changes):
+   - Use the rag_review_comparison_tool to search both 2024 and 2025 reviews simultaneously
+   - This is perfect for questions like "What new tools did I explore?", "How did my skills change?", "What's different between my reviews?"
+   - The tool will automatically search both reviews and provide structured comparison results
+   - Highlight new tools, skills, achievements, or changes between the two years
+
+4. General guidelines:
+   - If the information isn't found, clearly state that
+   - Focus on the specific domain (handbook vs reviews) based on the user's question
+   - For comparison questions, prefer rag_review_comparison_tool over individual searches
+   - Provide comprehensive answers using the most appropriate tool(s)
 
 You have access to semantic search capabilities that can find relevant information even when the exact words don't match the query.
 """
+
 
 
 def _get_attendance_report_logic(user_id: int, start_date: str, end_date: str) -> str:
@@ -217,14 +240,16 @@ def get_agent():
 
 def get_rag_agent():
     agent = Agent(
-            name="Employee Handbook RAG Assistant",
+            name="Employee Handbook & Review RAG Assistant",
             instructions=PULSE_RAG_AI_INSTRUCTIONS,
             model=LitellmModel(
             model="gemini/gemini-2.0-flash-exp",
             api_key=GEMINI_API_KEY,
             ),
             tools=[
-                rag_search_tool
+                rag_search_tool,
+                rag_review_tool,
+                rag_review_comparison_tool
             ]
         )
     return agent
