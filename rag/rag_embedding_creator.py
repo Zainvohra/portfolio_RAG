@@ -83,10 +83,10 @@ class RAGEmbeddingCreator:
             
             # Save vector store
             vectorstore_name = f"{user_id}_review_{review_year}"
-            vectorstore_path = f"rag/vectorstore/{vectorstore_name}"
+            vectorstore_path = f"vectorstore/{vectorstore_name}"
             
             # Ensure directory exists
-            os.makedirs("rag/vectorstore", exist_ok=True)
+            os.makedirs("vectorstore", exist_ok=True)
             
             vectorstore.save_local(vectorstore_path)
             print(f"✅ Vector store saved to: {vectorstore_path}")
@@ -112,8 +112,8 @@ class RAGEmbeddingCreator:
     
     def save_metadata(self):
         """Save metadata about all processed vector stores."""
-        metadata_path = "rag/vectorstore/metadata.json"
-        os.makedirs("rag/vectorstore", exist_ok=True)
+        metadata_path = "vectorstore/metadata.json"
+        os.makedirs("vectorstore", exist_ok=True)
         
         with open(metadata_path, 'w') as f:
             json.dump(self.metadata, f, indent=2)
@@ -132,12 +132,12 @@ class RAGEmbeddingCreator:
         # Process both PDFs
         pdfs_to_process = [
             {
-                'path': 'rag/docs/review_2024.pdf',
+                'path': 'docs/review_2024.pdf',
                 'user_id': 'user1',
                 'review_year': '2024'
             },
             {
-                'path': 'rag/docs/review_2025.pdf',
+                'path': 'docs/review_2025.pdf',
                 'user_id': 'user1', 
                 'review_year': '2025'
             }
