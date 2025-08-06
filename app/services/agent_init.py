@@ -1,4 +1,4 @@
-from agents import Agent, Runner, AsyncOpenAI, OpenAIChatCompletionsModel, function_tool
+from agents import Agent, Runner, AsyncOpenAI, OpenAIChatCompletionsModel, function_tool, SQLiteSession
 import os
 from dotenv import load_dotenv
 from agents.extensions.models.litellm_model import LitellmModel
@@ -115,6 +115,8 @@ When users ask questions, you should:
 
 You have access to semantic search capabilities that can find relevant information even when the exact words don't match the query.
 """
+
+session = SQLiteSession("user_random")
 
 # Keep original function_tool versions for backward compatibility
 @function_tool
@@ -243,7 +245,7 @@ async def query_pulse_ai_mcp(query: str):
                 ),
             )
 
-            result = await Runner.run(starting_agent=agent, input=query)
+            result = await Runner.run(starting_agent=agent, input=query, session=session)
             print(f"🎯 MCP Result: {result.final_output[:100]}...")
             return result.final_output
     except Exception as e:
