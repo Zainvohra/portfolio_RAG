@@ -1,12 +1,7 @@
-
-
-import asyncio
-import json
-from datetime import date
 import os
 import sys
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
@@ -53,15 +48,6 @@ async def send_onboarding_email(user_id: int) -> str:
     print(f"🔧 [MCP-TOOL-CALLED] send_onboarding_email({user_id})")
     result = await _send_onboarding_email(user_id=user_id)
     print(f"🔧 [MCP-TOOL-RESULT] send_onboarding_email → {result[:100]}...")
-    return result
-
-# Simple test tools like in the reference
-@mcp.tool()
-def add(a: int, b: int) -> int:
-    """Add two numbers"""
-    print(f"🔧 [MCP-TOOL-CALLED] add({a}, {b})")
-    result = a + b
-    print(f"🔧 [MCP-TOOL-RESULT] add → {result}")
     return result
 
 @mcp.tool()

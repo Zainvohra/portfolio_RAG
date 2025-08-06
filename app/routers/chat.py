@@ -1,7 +1,7 @@
 import structlog
 from fastapi import Response
 
-from app.services.agents import query_pulse_ai_mcp, query_pulse_ai
+from app.services.agent_init import query_pulse_ai_mcp, query_pulse_ai
 from app.services.emails import send_email
 from fastapi import APIRouter
 from app.schemas import PulseAIPayload
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/pulse/chat")
 async def health_check():
     """Health check endpoint to test API connectivity"""
     try:
-        from app.services.agents import GEMINI_API_KEY
+        from app.services.agent_init import GEMINI_API_KEY
         if not GEMINI_API_KEY:
             return Response(
                 content="Error: GEMINI_API_KEY not configured", 

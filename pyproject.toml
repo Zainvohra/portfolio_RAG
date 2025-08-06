@@ -23,7 +23,7 @@ dependencies = [
     "singleton-decorator>=1.0.0",
     "sqlalchemy>=2.0.41",
     "structlog>=25.2.0",
-     "litellm>=1.0.0",
+    "litellm>=1.0.0",
     "openai-agents['litellm']>=0.1.0",
 ]
 

@@ -1,25 +1,68 @@
 from agents import Agent, Runner, AsyncOpenAI, OpenAIChatCompletionsModel, function_tool
 import os
 from dotenv import load_dotenv
-from datetime import date
-import json
 from agents.extensions.models.litellm_model import LitellmModel
 from agents.model_settings import ModelSettings
 from rag.rag_tools import rag_search_tool, rag_review_tool, rag_review_comparison_tool
 from app.helpers.utils import _get_attendance_report_logic, _get_missing_attendance_user_ids, _get_missing_attendance, _send_onboarding_email
 # MCP imports
 from agents.mcp import MCPServer, MCPServerSse
-from mcp.server.fastmcp import FastMCP
-import asyncio
-import subprocess
-import time
-import shutil
-from typing import Any
+from typing import List
 
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", None)
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", None)
+
+
+''' ------------------------------------------------------------------------------------------------------------------------------
+ Below is the production level Pipedream SDK managed implementation of an GMail MCP server with production-grade OAuth management,
+ specifically for the case where we have multiple users each logging in with their own GMail account. 
+
+# from pipedream import Pipedream
+# from openai import OpenAI
+
+pd = Pipedream(
+    project_id=os.getenv('PIPEDREAM_PROJECT_ID', None),
+    project_environment=os.getenv('PIPEDREAM_ENVIRONMENT', None),
+    client_id=os.getenv('PIPEDREAM_CLIENT_ID', None),
+    client_secret=os.getenv('PIPEDREAM_CLIENT_SECRET', None)
+)
+app_slug = "gmail"
+# Get access token for MCP server auth
+access_token = await pd.raw_access_token
+
+# Send the unique ID that you use to identify this user in your system
+external_user_id = 'abc-123'  # Used in MCP URL to identify the user
+
+# Initialize OpenAI client
+client = openai.OpenAI()
+
+# Make the OpenAI request with the MCP server
+response = client.responses.create(
+    model='gpt-4.1',
+    tools=[
+        {
+            "type": "mcp",
+            "server_label": app_slug,
+            "server_url": "https://remote.mcp.pipedream.net",
+            "headers": {
+                "Authorization": f"Bearer {access_token}",
+                "x-pd-project-id": PIPEDREAM_PROJECT_ID,
+                "x-pd-environment": PIPEDREAM_ENVIRONMENT,
+                "x-pd-external-user-id": external_user_id,
+                "x-pd-app-slug": app_slug,
+            },
+            "require_approval": "never"
+        }
+    ],
+    input='Summarize my latest email in my inbox.'
+)
+
+print(response)
+
+---------------------------------------------------------------------------------------------------------------------------------------
+'''
 
 PULSE_AI_INSTRUCTIONS = """
 You are PulseAI, a concise assistant that can call any registered tool.
@@ -73,10 +116,6 @@ When users ask questions, you should:
 You have access to semantic search capabilities that can find relevant information even when the exact words don't match the query.
 """
 
-
-
-
-
 # Keep original function_tool versions for backward compatibility
 @function_tool
 def get_attendance_report_ft(user_id: int, start_date: str, end_date: str) -> str:
@@ -100,22 +139,22 @@ async def send_onboarding_email_ft(user_id: int) -> str:
     response = await _send_onboarding_email(user_id=user_id)
     return response
 
-async def run_with_mcp_server(mcp_server: MCPServer, query: str) -> str:
-    """Run a query using the MCP server (following reference pattern)"""
-    agent = Agent(
-        name="PulseAI Assistant",
-        instructions=PULSE_AI_INSTRUCTIONS,
-        mcp_servers=[mcp_server],
-        model_settings=ModelSettings(tool_choice="auto"),  
-        model=LitellmModel(
-            model="gemini/gemini-2.0-flash-exp",
-            api_key=GEMINI_API_KEY,
-        ),
-    )
-
-    print(f"Running: {query}")
-    result = await Runner.run(starting_agent=agent, input=query)
-    return result.final_output
+# async def run_with_mcp_server(mcp_servers: List[MCPServer], query: str) -> str:
+#     """Run a query using the MCP server (following reference pattern)"""
+#     agent = Agent(
+#         name="PulseAI Assistant",
+#         instructions=PULSE_AI_INSTRUCTIONS,
+#         mcp_servers=[mcp_servers],
+#         model_settings=ModelSettings(tool_choice="auto"),
+#         model=LitellmModel(
+#             model="gemini/gemini-2.0-flash-exp",
+#             api_key=GEMINI_API_KEY,
+#         ),
+#     )
+#
+#     print(f"Running: {query}")
+#     result = await Runner.run(starting_agent=agent, input=query)
+#     return result.final_output
 
 def get_agent():
     """Original function tool based agent"""
@@ -182,11 +221,31 @@ async def query_pulse_ai_mcp(query: str):
             params={
                 "url": "http://localhost:8000/sse",  # FastMCP default port
             },
-        ) as server:
+        ) as pulse_local_server, MCPServerSse(
+            name="Pipedream Gmail Server",
+            params={
+                "url": os.getenv('GMAIL_MCP_URL'),
+            },
+            client_session_timeout_seconds=60,
+        ) as gmail_server:
             print(f"🤖 MCP Query: {query}")
-            result = await run_with_mcp_server(server, query)
-            print(f"🎯 MCP Result: {result[:100]}...")
-            return result
+
+            # Pass both into the function that creates the Agent
+            # Instantiate the agent here, using both servers
+            agent = Agent(
+                name="PulseAI Assistant",
+                instructions=PULSE_AI_INSTRUCTIONS,
+                mcp_servers=[pulse_local_server, gmail_server],
+                model_settings=ModelSettings(tool_choice="auto"),
+                model=LitellmModel(
+                    model="gemini/gemini-2.0-flash-exp",
+                    api_key=GEMINI_API_KEY,
+                ),
+            )
+
+            result = await Runner.run(starting_agent=agent, input=query)
+            print(f"🎯 MCP Result: {result.final_output[:100]}...")
+            return result.final_output
     except Exception as e:
         print(f"Error in query_pulse_ai_mcp: {str(e)}")
         print(f"Error type: {type(e)}")
