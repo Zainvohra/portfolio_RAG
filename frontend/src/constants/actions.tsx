@@ -18,7 +18,7 @@ export const ACTIONS_LIST: Action[] = [
     prompt:
       "get attendance report for user [user_id] from '[start_date]' till '[end_date]'",
     icon: <Calendar className="w-4 h-4" />,
-    category: "Tool Calling",
+    category: "MCP",
   },
   {
     id: "onboarding-email",
@@ -27,7 +27,7 @@ export const ACTIONS_LIST: Action[] = [
     prompt:
       "send onboarding emails to new employee with employee ID [employee_id]",
     icon: <Mail className="w-4 h-4" />,
-    category: "Tool Calling",
+    category: "MCP",
   },
   {
     id: "missing-attendance",
@@ -37,7 +37,7 @@ export const ACTIONS_LIST: Action[] = [
     prompt:
       "get missing attendance for user [user_id] from '[start_date]' till '[end_date]'",
     icon: <TrendingUp className="w-4 h-4" />,
-    category: "Tool Calling",
+    category: "MCP",
   },
   {
     id: "employee-handbook",
