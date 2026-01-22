@@ -11,8 +11,13 @@ from app.routers import chat
 from . import models
 from .database import engine
 
+logger = structlog.get_logger()
 
-models.Base.metadata.create_all(bind=engine)
+# Make database initialization optional for deployment without database
+try:
+    models.Base.metadata.create_all(bind=engine)
+except Exception as e:
+    logger.warning("Database initialization skipped", error=str(e))
 
 async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
@@ -25,8 +30,6 @@ app.add_middleware(
     allow_methods=["*"],  # Allow all methods
     allow_headers=["*"],  # Allow all headers
 )
-
-logger = structlog.get_logger()
 
 app.include_router(chat.router)
 
