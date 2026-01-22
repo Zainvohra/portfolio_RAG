@@ -1,0 +1,8 @@
+{
+  "portfolio_data": {
+    "path": "vectorstore/portfolio_data",
+    "chunks_count": 5,
+    "pdf_path": "/Users/zainulabideenvohra/Desktop/ai-developer-camp/rag/docs/portfolio_data.pdf",
+    "index_name": "portfolio_data"
+  }
+}

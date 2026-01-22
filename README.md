@@ -45,6 +45,12 @@ From the root of the project execute:
 uv sync
 ```
 
+Activate the virtual environment with this command:
+
+```bash
+source .venv/bin/activate
+```
+
 ## Run application
 
 ### Development mode
@@ -98,11 +104,17 @@ docker-compose up -d
 This will create a database on port 5434 and mailhog.
 (You can customize the port numbers in the docker-compose.yaml)
 
+### Setting up alembic
+
+Create a file `alembic.ini` and paste the contents of `alembic.ini.example` in it.
+
+Find `sqlalchemy.url` and replace the values in curly brackets with actual values.
+
+```
+postgresql+psycopg2://{{username}}:{{password}}@localhost:{{db_port}}/{{db_name}}
+```
+
 ### Creating Migrations
-
-Find alembic.ini at the root of the project. Find `sqlalchemy.url` and add this value
-
-`postgresql+psycopg2://{{username}}:{{password}}@localhost:{{db_port}}/{{db_name}}`
 
 ```
 alembic revision --autogenerate -m "initial migration"
@@ -138,3 +150,41 @@ From the tests directory in this project, run the following command:
 ```
 python tests/test_generate_mock_attendance.py
 ```
+
+## Portfolio RAG Setup
+
+The system includes a RAG (Retrieval Augmented Generation) feature for portfolio data that allows users to ask questions about projects, experience, and skills.
+
+### Setting up Portfolio Data
+
+1. **Create your portfolio PDF**: Create a PDF file containing your portfolio information (projects, experience, skills, etc.) and place it in `rag/docs/portfolio_data.pdf`
+
+2. **Generate embeddings**: Run the portfolio embedding creator script:
+
+```bash
+python rag/portfolio_embedding_creator.py --file rag/docs/portfolio_data.pdf
+```
+
+Or use the default path:
+
+```bash
+python rag/portfolio_embedding_creator.py
+```
+
+This will create a FAISS vector store at `rag/vectorstore/portfolio_data.faiss`.
+
+3. **Start the backend**: The portfolio RAG tool is automatically available when you start the FastAPI server:
+
+```bash
+uv run fastapi dev
+```
+
+4. **Test the API**: You can test the portfolio chat endpoint:
+
+```bash
+curl -X POST http://localhost:8000/pulse/chat \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What projects have you worked on?"}'
+```
+
+For more detailed instructions, see [rag/docs/PORTFOLIO_SETUP.md](rag/docs/PORTFOLIO_SETUP.md).
