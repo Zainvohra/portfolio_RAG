@@ -46,6 +46,7 @@ def configure_gemini_model():
 
     # Configure Gemini API key - this handles all actual LLM requests
     gemini_api_key = os.getenv("GEMINI_API_KEY")
+    print(f"🔑 GEMINI_API_KEY loaded: {'Yes' if gemini_api_key else 'No'} (first 10 chars: {gemini_api_key[:10] if gemini_api_key else 'None'})")
     
     # Validate Gemini API key
     if not gemini_api_key:

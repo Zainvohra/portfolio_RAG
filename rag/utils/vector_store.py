@@ -12,8 +12,7 @@ class VectorStoreManager:
     """Manages FAISS vector store operations."""
     
     def __init__(self, embedding_manager: Optional[EmbeddingManager] = None,
-                 vectorstore_dir_path: str = "rag\\vectorstore"):
-                # vectorstore_dir_path: str = "rag/vectorstore"):
+                 vectorstore_dir_path: str = None):
         """
         Initialize the vector store manager.
         
@@ -21,6 +20,13 @@ class VectorStoreManager:
             embedding_manager (Optional[EmbeddingManager]): Embedding manager instance
             vectorstore_dir_path (str): Directory path for vectorstore files
         """
+        # Use absolute path if not provided
+        if vectorstore_dir_path is None:
+            # Get the absolute path to the rag/vectorstore directory
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            rag_dir = os.path.dirname(current_dir)  # Go up from utils/ to rag/
+            vectorstore_dir_path = os.path.join(rag_dir, "vectorstore")
+        
         self.vectorstore_dir_path = vectorstore_dir_path
         self.embedding_manager = embedding_manager or EmbeddingManager()
         self.vectorstore: Optional[FAISS] = None

@@ -1,6 +1,11 @@
+import os
 from typing import List, Dict, Any
 from agents import function_tool
 from rag.utils import VectorStoreManager
+
+# Get the absolute path to the vectorstore directory
+RAG_DIR = os.path.dirname(os.path.abspath(__file__))
+VECTORSTORE_DIR = os.path.join(RAG_DIR, "vectorstore")
 
 @function_tool
 def rag_search_tool(index_name: str, query: str, k: int = 3) -> Dict[str, Any]:
@@ -17,8 +22,8 @@ def rag_search_tool(index_name: str, query: str, k: int = 3) -> Dict[str, Any]:
     """
     try:
         print("Called with params: ", index_name, query)
-        # Initialize vector store manager
-        vs_manager = VectorStoreManager()
+        # Initialize vector store manager with correct path
+        vs_manager = VectorStoreManager(vectorstore_dir_path=VECTORSTORE_DIR)
         
         # Load the vector store
         vectorstore = vs_manager.load_vectorstore(index_name)
@@ -82,8 +87,8 @@ def rag_review_tool(query: str, review_year: str = "2024", k: int = 3) -> Dict[s
                 "results": []
             }
         
-        # Initialize vector store manager
-        vs_manager = VectorStoreManager()
+        # Initialize vector store manager with correct path
+        vs_manager = VectorStoreManager(vectorstore_dir_path=VECTORSTORE_DIR)
         
         # Construct index name
         index_name = f"user1_review_{review_year}"
@@ -144,8 +149,8 @@ def rag_review_comparison_tool(query: str, k: int = 3) -> Dict[str, Any]:
     try:
         print(f"Review comparison called with params: {query}")
         
-        # Initialize vector store manager
-        vs_manager = VectorStoreManager()
+        # Initialize vector store manager with correct path
+        vs_manager = VectorStoreManager(vectorstore_dir_path=VECTORSTORE_DIR)
         
         comparison_results = {
             "status": "success",
@@ -191,5 +196,64 @@ def rag_review_comparison_tool(query: str, k: int = 3) -> Dict[str, Any]:
         }
 
 
+@function_tool
+def rag_portfolio_tool(query: str, k: int = 3) -> Dict[str, Any]:
+    """
+    Search in portfolio data (projects, experience, skills, etc.).
+    
+    Args:
+        query (str): User query to search for in portfolio data
+        k (int): Number of results to return (default: 3)
+        
+    Returns:
+        Dict[str, Any]: Search results with status and documents
+    """
+    try:
+        print(f"Portfolio search called with params: {query}")
+        
+        # Initialize vector store manager with correct path
+        vs_manager = VectorStoreManager(vectorstore_dir_path=VECTORSTORE_DIR)
+        
+        # Use default portfolio index name
+        index_name = "portfolio_data"
+        
+        # Load the vector store
+        vectorstore = vs_manager.load_vectorstore(index_name)
+        
+        if vectorstore is None:
+            return {
+                "status": "error",
+                "message": f"Failed to load portfolio data. Please ensure the portfolio embeddings have been created.",
+                "results": []
+            }
+        
+        # Perform semantic search
+        search_results = vs_manager.semantic_search(query, k=k)
+        
+        # Format results
+        formatted_results = []
+        for i, doc in enumerate(search_results):
+            formatted_results.append({
+                "rank": i + 1,
+                "content": doc.page_content,
+                "metadata": getattr(doc, 'metadata', {})
+            })
+        
+        return {
+            "status": "success",
+            "message": f"Found {len(formatted_results)} results in portfolio data for query: '{query}'",
+            "results": formatted_results,
+            "query": query,
+            "index_used": index_name
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Error during portfolio search: {str(e)}",
+            "results": []
+        }
+
+
 # Export the tools for agent use
-rag_tools = [rag_search_tool, rag_review_tool, rag_review_comparison_tool]
+rag_tools = [rag_search_tool, rag_review_tool, rag_review_comparison_tool, rag_portfolio_tool]

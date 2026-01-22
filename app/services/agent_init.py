@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 from agents.extensions.models.litellm_model import LitellmModel
 from agents.model_settings import ModelSettings
-from rag.rag_tools import rag_search_tool, rag_review_tool, rag_review_comparison_tool
+from rag.rag_tools import rag_search_tool, rag_review_tool, rag_review_comparison_tool, rag_portfolio_tool
 from app.helpers.utils import _get_attendance_report_logic, _get_missing_attendance_user_ids, _get_missing_attendance, _send_onboarding_email
 # MCP imports
 from agents.mcp import MCPServer, MCPServerSse
@@ -82,11 +82,12 @@ You are PulseAI, a concise assistant that can call any registered tool.
 7. Every response should be of atleast two lines.
 """
 
-PULSE_RAG_AI_INSTRUCTIONS = """You are an intelligent RAG (Retrieval Augmented Generation) assistant specialized in answering questions about the employee handbook and user performance reviews.
+PULSE_RAG_AI_INSTRUCTIONS = """You are an intelligent RAG (Retrieval Augmented Generation) assistant specialized in answering questions about the employee handbook, user performance reviews, and portfolio information.
 
 Your primary functions are to help users find information from:
 1. The company's employee handbook
 2. User1's performance reviews (2024 and 2025)
+3. Portfolio data (projects, experience, skills, achievements, etc.)
 
 When users ask questions, you should:
 
@@ -107,11 +108,18 @@ When users ask questions, you should:
    - The tool will automatically search both reviews and provide structured comparison results
    - Highlight new tools, skills, achievements, or changes between the two years
 
-4. General guidelines:
+4. For portfolio-related questions (projects, experience, skills, technologies, achievements):
+   - Use the rag_portfolio_tool to search in portfolio data
+   - This includes questions about: projects worked on, technologies used, work experience, achievements, skills, education, etc.
+   - Provide detailed, engaging answers that highlight relevant projects and experiences
+   - When discussing projects, include key technologies, challenges solved, and impact
+
+5. General guidelines:
    - If the information isn't found, clearly state that
-   - Focus on the specific domain (handbook vs reviews) based on the user's question
+   - Focus on the specific domain (handbook vs reviews vs portfolio) based on the user's question
    - For comparison questions, prefer rag_review_comparison_tool over individual searches
    - Provide comprehensive answers using the most appropriate tool(s)
+   - For portfolio questions, be engaging and highlight achievements and technical details
 
 You have access to semantic search capabilities that can find relevant information even when the exact words don't match the query.
 """
@@ -178,16 +186,17 @@ def get_agent():
 def get_rag_agent():
     """RAG agent using Gemini model"""
     agent = Agent(
-            name="Employee Handbook & Review RAG Assistant",
+            name="Employee Handbook, Review & Portfolio RAG Assistant",
             instructions=PULSE_RAG_AI_INSTRUCTIONS,
             model=LitellmModel(
-            model="gemini/gemini-2.0-flash-exp",
+            model="gemini/gemini-2.5-flash-lite",
             api_key=GEMINI_API_KEY,
             ),
             tools=[
                 rag_search_tool,
                 rag_review_tool,
-                rag_review_comparison_tool
+                rag_review_comparison_tool,
+                rag_portfolio_tool
             ]
         )
     return agent
@@ -223,13 +232,14 @@ async def query_pulse_ai_mcp(query: str):
             params={
                 "url": "http://localhost:8000/sse",  # FastMCP default port
             },
-        ) as pulse_local_server, MCPServerSse(
-            name="Pipedream Gmail Server",
-            params={
-                "url": os.getenv('GMAIL_MCP_URL'),
-            },
-            client_session_timeout_seconds=60,
-        ) as gmail_server:
+        ) as pulse_local_server:
+        # MCPServerSse(
+        #     name="Pipedream Gmail Server",
+        #     params={
+        #         "url": os.getenv('GMAIL_MCP_URL'),
+        #     },
+        #     client_session_timeout_seconds=60,
+        # ) as gmail_server:
             print(f"🤖 MCP Query: {query}")
 
             # Pass both into the function that creates the Agent
@@ -237,10 +247,10 @@ async def query_pulse_ai_mcp(query: str):
             agent = Agent(
                 name="PulseAI Assistant",
                 instructions=PULSE_AI_INSTRUCTIONS,
-                mcp_servers=[pulse_local_server, gmail_server],
+                mcp_servers=[pulse_local_server],
                 model_settings=ModelSettings(tool_choice="auto"),
                 model=LitellmModel(
-                    model="gemini/gemini-2.0-flash-exp",
+                    model="gemini/gemini-2.5-flash-lite",
                     api_key=GEMINI_API_KEY,
                 ),
             )
