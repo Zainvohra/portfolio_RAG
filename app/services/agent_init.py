@@ -174,10 +174,10 @@ def get_rag_agent():
             name="Zain ul Abideen Vohra Portfolio RAG Assistant",
             instructions=PULSE_RAG_AI_INSTRUCTIONS,
             model=LitellmModel(
-            # model="gemini/gemini-2.5-flash-lite",
-            # api_key=GEMINI_API_KEY,
-             model="claude-3-5-sonnet-20241022",  # or another Claude model name
-    api_key=ANTHROPIC_API_KEY,
+            model="gemini/gemini-2.5-flash-lite",
+            api_key=GEMINI_API_KEY,
+    #          model="claude-3-5-sonnet-20241022",  # or another Claude model name
+    # api_key=ANTHROPIC_API_KEY,
             ),
             tools=[
                 rag_portfolio_tool
