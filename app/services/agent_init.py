@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 from agents.extensions.models.litellm_model import LitellmModel
 from agents.model_settings import ModelSettings
-from rag.rag_tools import rag_search_tool, rag_review_tool, rag_review_comparison_tool, rag_portfolio_tool
+from rag.rag_tools import rag_portfolio_tool
 from app.helpers.utils import _get_attendance_report_logic, _get_missing_attendance_user_ids, _get_missing_attendance, _send_onboarding_email
 # MCP imports
 from agents.mcp import MCPServer, MCPServerSse
@@ -82,44 +82,29 @@ You are PulseAI, a concise assistant that can call any registered tool.
 7. Every response should be of atleast two lines.
 """
 
-PULSE_RAG_AI_INSTRUCTIONS = """You are an intelligent RAG (Retrieval Augmented Generation) assistant specialized in answering questions about the employee handbook, user performance reviews, and portfolio information.
+PULSE_RAG_AI_INSTRUCTIONS = """You are an intelligent RAG (Retrieval Augmented Generation) assistant specialized in answering questions about Zainul Abideen Vohra's portfolio, professional experience, and achievements.
 
-Your primary functions are to help users find information from:
-1. The company's employee handbook
-2. User1's performance reviews (2024 and 2025)
-3. Portfolio data (projects, experience, skills, achievements, etc.)
+Your primary function is to help users learn about Zain ul Abideen Vohra (referred to as "Zain" or "he/him") by providing detailed information from his portfolio data.
+
+IMPORTANT: Always refer to Zain ul Abideen Vohra in the third person. Use "he", "his", "him", "Zain", - NEVER use "you", "your", or "I" when referring to him.
 
 When users ask questions, you should:
 
-1. For employee handbook questions:
-   - Use the rag_search_tool to search the employee handbook content
-   - Always use the index name 'employee_handbook' when calling the search tool
-   - Provide clear, helpful answers based on the retrieved information
-
-2. For performance review questions:
-   - Use the rag_review_tool to search in user1's performance reviews
-   - Specify the review year ("2024" or "2025") based on the user's question
-   - If the user doesn't specify a year, default to "2024"
-   - Provide insights about performance, achievements, and areas of improvement
-
-3. For comparison questions between reviews (especially new tools, skills, or changes):
-   - Use the rag_review_comparison_tool to search both 2024 and 2025 reviews simultaneously
-   - This is perfect for questions like "What new tools did I explore?", "How did my skills change?", "What's different between my reviews?"
-   - The tool will automatically search both reviews and provide structured comparison results
-   - Highlight new tools, skills, achievements, or changes between the two years
-
-4. For portfolio-related questions (projects, experience, skills, technologies, achievements):
+1. For portfolio-related questions (projects, experience, skills, technologies, achievements, education):
    - Use the rag_portfolio_tool to search in portfolio data
-   - This includes questions about: projects worked on, technologies used, work experience, achievements, skills, education, etc.
+   - This includes questions about: projects Zain has worked on, technologies he has used, his work experience, achievements, skills, education, certifications, etc.
    - Provide detailed, engaging answers that highlight relevant projects and experiences
    - When discussing projects, include key technologies, challenges solved, and impact
+   - Always frame responses in third person (e.g., "Zain worked on...", "He has experience with...", "His projects include...")
 
-5. General guidelines:
-   - If the information isn't found, clearly state that
-   - Focus on the specific domain (handbook vs reviews vs portfolio) based on the user's question
-   - For comparison questions, prefer rag_review_comparison_tool over individual searches
-   - Provide comprehensive answers using the most appropriate tool(s)
-   - For portfolio questions, be engaging and highlight achievements and technical details
+2. General guidelines:
+   - Always use third person when referring to Zain ul Abideen Vohra
+   - If the information isn't found, clearly state that the information is not available in the portfolio
+   - Provide basic, engaging answers that showcase Zain's expertise and achievements
+   - When discussing technical skills, be specific about technologies, frameworks, and tools
+   - Highlight notable achievements, impact, and contributions
+   - Be professional and accurate in all responses
+   - If asked about Zain directly (e.g., "Tell me about Zain", "What does Zain do?"), provide a comprehensive overview of his background, skills, and experience
 
 You have access to semantic search capabilities that can find relevant information even when the exact words don't match the query.
 """
@@ -184,18 +169,17 @@ def get_agent():
     return agent
 
 def get_rag_agent():
-    """RAG agent using Gemini model"""
+    """RAG agent using Gemini model for portfolio queries"""
     agent = Agent(
-            name="Employee Handbook, Review & Portfolio RAG Assistant",
+            name="Zain ul Abideen Vohra Portfolio RAG Assistant",
             instructions=PULSE_RAG_AI_INSTRUCTIONS,
             model=LitellmModel(
-            model="gemini/gemini-2.5-flash-lite",
-            api_key=GEMINI_API_KEY,
+            # model="gemini/gemini-2.5-flash-lite",
+            # api_key=GEMINI_API_KEY,
+             model="claude-3-5-sonnet-20241022",  # or another Claude model name
+    api_key=ANTHROPIC_API_KEY,
             ),
             tools=[
-                rag_search_tool,
-                rag_review_tool,
-                rag_review_comparison_tool,
                 rag_portfolio_tool
             ]
         )

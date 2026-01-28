@@ -35,7 +35,13 @@ app.include_router(chat.router)
 
 @app.get("/health")
 async def health_check():
+    """Health check endpoint for Render and monitoring services"""
     return {"status": "ok", "message": "PulseAI Backend is running"}
+
+@app.get("/ping")
+async def ping():
+    """Lightweight ping endpoint to keep service awake - use this for cron jobs"""
+    return {"status": "pong", "message": "Service is alive"}
 
 @app.get("/")
 async def root():
